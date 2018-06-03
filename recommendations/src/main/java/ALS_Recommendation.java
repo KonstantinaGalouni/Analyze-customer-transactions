@@ -155,14 +155,14 @@ public class ALS_Recommendation {
                             train_set.cache();
                             validation_set.cache();
 
-                            start = System.nanoTime();
+                            //start = System.nanoTime();
                             model = ALS.trainImplicit(JavaRDD.toRDD(train_set), rank, iteration, lamda, alpha);
-                            elapsedTime = System.nanoTime() - start;
-                            System.out.println("Train Time = "+(double)elapsedTime/1000000000 + " seconds");
+                            //elapsedTime = System.nanoTime() - start;
+                            //System.out.println("Train Time = "+(double)elapsedTime/1000000000 + " seconds");
 
                             percentileRankings[fold] = computePercentileRanking(model, validation_set);
 
-                            System.out.println("Current Percentile ranking = " + percentileRankings[fold]);
+                            //System.out.println("Current Percentile ranking = " + percentileRankings[fold]);
                             sum += percentileRankings[fold];
                         }
 
@@ -249,17 +249,14 @@ public class ALS_Recommendation {
 
     };
 
-    double computeMse(MatrixFactorizationModel model, JavaRDD<Rating> validation_set, boolean test) {
+    double computeMse(MatrixFactorizationModel model, JavaRDD<Rating> validation_set) {
         // Evaluate the model on rating data
         JavaRDD<Tuple2<Object, Object>> userProducts = validation_set.map(r -> new Tuple2<>(r.user(), r.product()));
 
-        long start = System.nanoTime();
         JavaPairRDD<Tuple2<Integer, Integer>, Double> predictions = JavaPairRDD.fromJavaRDD(
                 model.predict(JavaRDD.toRDD(userProducts)).toJavaRDD()
                         .map(r -> new Tuple2<>(new Tuple2<>(r.user(), r.product()), r.rating()))
         );
-        long elapsedTime = System.nanoTime() - start;
-        System.out.println("Predict Time = "+(double)elapsedTime/1000000000 + " seconds");
 
         JavaRDD<Tuple2<Double, Double>> ratesAndPreds = JavaPairRDD.fromJavaRDD(
                 validation_set.map(r -> new Tuple2<>(new Tuple2<>(r.user(), r.product()), r.rating())))
@@ -267,8 +264,6 @@ public class ALS_Recommendation {
 
         double MSE = ratesAndPreds.mapToDouble(pair -> {
             double err = pair._1() - pair._2();
-            if(test)
-                System.out.println("rating: "+pair._1() + " - predicted: "+pair._2());
             return err * err;
         }).mean();
 

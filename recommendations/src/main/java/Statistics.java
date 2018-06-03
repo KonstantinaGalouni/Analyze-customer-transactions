@@ -11,16 +11,13 @@ public class Statistics {
     Dataset events;
     Dataset category_tree;
 
-    Statistics(SparkSession spark, Dataset events, Dataset category_tree) {
+    String path_for_exported_stats;
+
+    Statistics(SparkSession spark, Dataset events, Dataset category_tree, String path_for_exported_stats) {
         this.spark = spark;
         this.events = events;
         this.category_tree = category_tree;
-
-        try {
-            this.category_tree.createTempView("Category_tree");
-        } catch (AnalysisException e) {
-            e.printStackTrace();
-        }
+        this.path_for_exported_stats = path_for_exported_stats;
     }
 
     void countActions() {
@@ -66,7 +63,7 @@ public class Statistics {
         long categoriesNum = this.category_tree.distinct().count();
         //System.out.println("Number of categories = "+categoriesNum);
 
-        Dataset categoriesGroupedByParent = this.spark.sql(" select categoryid from Category_tree where parentid is not null group By categoryid, parentid order by parentid");
+        Dataset categoriesGroupedByParent = this.spark.sql(" select categoryid from categories where parentid is not null group By categoryid, parentid order by parentid");
         categoriesGroupedByParent.show();
         //System.out.println(categoriesGroupedByParent.collectAsList());
     }
@@ -76,7 +73,7 @@ public class Statistics {
         //parentCategories.show();
 
         Dataset rootCategories = this.category_tree.select("categoryid").where("parentid is null").distinct();
-        rootCategories.coalesce(1).write().mode(SaveMode.Overwrite).option("header", "true").csv("/home/konstantina/Documents/rootCategories.csv");
+        rootCategories.coalesce(1).write().mode(SaveMode.Overwrite).option("header", "true").csv(this.path_for_exported_stats+"rootCategories.csv");
         rootCategories.show();
         long rootCategoriesNum = rootCategories.count();
         System.out.println("Number of categories without parent = "+rootCategoriesNum);

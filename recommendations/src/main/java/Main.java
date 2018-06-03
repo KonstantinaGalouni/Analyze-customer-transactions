@@ -7,7 +7,9 @@ public class Main {
                 //.master("spark://astero.di.uoa.gr:7077")
                 .appName("recommendations")
                 .getOrCreate();
-        
+        String path_for_exported_stats = "/home/konstantina/Documents/big_data/";
+        //String path_for_exported_stats = "/media/myrto/Files/Documents/Master/DI UOA/BigData/project/gitFolder/exported_csv/";
+
         String events_csv = "/home/konstantina/Documents/big_data/retailrocket-recommender-system-dataset/events.csv";
         String category_tree_csv = "/home/konstantina/Documents/big_data/retailrocket-recommender-system-dataset/category_tree.csv";
 
@@ -22,20 +24,23 @@ public class Main {
         //Dataset items = spark.read().format("com.databricks.spark.avro").load("hdfs://astero.di.uoa.gr:8020/topics/items");
 
         ALS_Recommendation als = new ALS_Recommendation(spark, events);
-        //als.createVisitorItemRatings();
+        als.createVisitorItemRatings();
         //als.printVisitorItemRatings();
-        //als.createRatingsFile();
+        als.createRatingsFile();
         //long start = System.nanoTime();
-        //als.ALS_Cross_Val(5);
+        als.ALS_Cross_Val(5);
         //long elapsedTime = System.nanoTime() - start;
         //System.out.println("Elapsed Time = "+(double)elapsedTime/1000000000 + " seconds");
         //als.saveAndLoadModel();
 
+        //create a temporary view using the category_tree
+        //category_tree.createTempView("categories");
+        //RootCategories rootCategories = new RootCategories(spark, events, category_tree, path_for_exported_stats);
+        //rootCategories.getRootCategories();
 
         // Some minor statistics with Java Spark - testing purposes
-
         //events.createTempView("Events");
-        //Statistics stats = new Statistics(spark, events, category_tree);
+        //Statistics stats = new Statistics(spark, events, category_tree, path_for_exported_stats);
         //stats.countActions();
         //stats.categoriesByParent();
         //stats.findRootCategories();
